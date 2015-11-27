@@ -1,0 +1,10 @@
+# Set library paths.
+
+set (OPENMESH_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/lib/OpenMesh/src/" CACHE
+  STRING "OpenMesh source directory" FORCE)
+
+set (OPENMESH_LIBRARY_DIR "${CMAKE_CURRENT_SOURCE_DIR}/lib/OpenMesh/build/Build/lib/" CACHE
+  STRING "OpenMesh library directory" FORCE)
+
+set (EIGEN_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/lib/Eigen/" CACHE
+  STRING "Eigen library directory" FORCE)
