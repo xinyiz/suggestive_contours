@@ -97,10 +97,30 @@ void renderSuggestiveContours(Vec3f actualCamPos) { // use this camera position 
   // -------------------------------------------------------------------------------------------------------------
 }
 
+/* Compute Surface Color */
+Vec3f calculateColor(CurvatureInfo c_info) {
+	float c_curv1 = c_info.curvatures[0];
+	float c_curv2 = c_info.curvatures[1];
+	//Normalize the values so that they are between 0 and 1
+	c_curv1 = (c_curv1 + 0.05f) / 0.1f;
+	c_curv2 = (c_curv2 + 0.05f) / 0.1f;
+	float c_curv;
+	//Find the max of the two curvatures
+	if (c_curv1 > c_curv2) c_curv = c_curv1;
+	else c_curv = c_curv2;
+	Vec3f color;
+	//Choose color based on curvature (red = valley, blue = mountain)
+	if (c_curv >= 0.75f) color = Vec3f(c_curv, 0, 0);
+	if (c_curv < 0.75f && c_curv >= 0.5f) color = Vec3f(c_curv, 1 - c_curv, 0);
+	if (c_curv < 0.5f && c_curv >= 0.25f) color = Vec3f(0, c_curv, 1 - c_curv);
+	if (c_curv < 0.25f) color = Vec3f(0, 0, 1 - c_curv);
+	return color;
+}
+
 void renderMesh() {
   if (!showSurface) glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE); // render regardless to remove hidden lines
 
-  glEnable(GL_LIGHTING);
+  glDisable(GL_LIGHTING);
   glLightfv(GL_LIGHT0, GL_POSITION, cameraPos);
 
   glDepthRange(0.001, 1);
@@ -111,21 +131,37 @@ void renderMesh() {
 // show edges
   for (Mesh::FaceIter f_it=mesh.faces_begin(); f_it!=mesh.faces_end(); ++f_it){
     OpenMesh::Vec3f point[3];
+	OpenMesh::Vec3f normal[3];
     Mesh::ConstFaceVertexIter cfv_it;
     cfv_it = mesh.cfv_iter(*f_it);
-    point[0] = mesh.point(*cfv_it);
-    point[1] = mesh.point(*(++cfv_it));
-    point[2] = mesh.point(*(++cfv_it));
+	const auto it0 = *cfv_it;
+	const auto it1 = *(++cfv_it);
+	const auto it2 = *(++cfv_it);
+    point[0] = mesh.point(it0); normal[0] = mesh.normal(it0);
+    point[1] = mesh.point(it1); normal[1] = mesh.normal(it1);
+    point[2] = mesh.point(it2); normal[2] = mesh.normal(it2);
 
-    //CurvatureInfo info1 = mesh.property(curvature,*cfv_it);
-    //avg_curva = info1 + info2 + info3/3;
-    //color = calculateColor(avg_curve)
+	/**************************Colors**************************/
+    CurvatureInfo c_info1 = mesh.property(curvature, it0);
+	CurvatureInfo c_info2 = mesh.property(curvature, it1);
+	CurvatureInfo c_info3 = mesh.property(curvature, it2);
+	Vec3f color1 = calculateColor(c_info1);
+	Vec3f color2 = calculateColor(c_info2);
+	Vec3f color3 = calculateColor(c_info3);
+	/**********************************************************/
 
     glBegin(GL_TRIANGLES);
-    //glchangeColor(color);
-    glVertex3f(point[0][0], point[0][1], point[0][2]);
-    glVertex3f(point[2][0], point[2][1], point[2][2]);
-    glVertex3f(point[1][0], point[1][1], point[1][2]);
+	glColor3f(color1[0], color1[1], color1[2]); 
+	glNormal3f(normal[0][0], normal[0][1], normal[0][2]); 
+	glVertex3f(point[0][0], point[0][1], point[0][2]);
+
+	glColor3f(color3[0], color3[1], color3[2]); 
+	glNormal3f(normal[2][0], normal[2][1], normal[2][2]); 
+	glVertex3f(point[2][0], point[2][1], point[2][2]);
+
+	glColor3f(color2[0], color2[1], color2[2]); 
+	glNormal3f(normal[1][0], normal[1][1], normal[1][2]); 
+	glVertex3f(point[1][0], point[1][1], point[1][2]);
     glEnd();
   }
 
