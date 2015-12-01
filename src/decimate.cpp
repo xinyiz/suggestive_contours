@@ -70,6 +70,23 @@ void simplify(Mesh& _mesh, const float _percentage, const std::string _output_fi
   std::cout << "Done." << std::endl;;
 }
 
+void updateQuadric(Mesh& _mesh, const VertexHandle& v) {
+  for (Mesh::ConstVertexFaceIter f_it = _mesh.cvf_begin(v); f_it != _mesh.cvf_end(v); ++f_it) {
+      const auto fh = *f_it;
+      Eigen::Vector4d fcoeff;
+      // calculate face normal
+      const auto normal = _mesh.calc_face_normal(fh).normalized();
+
+      // calculate face plane coefficients
+      const auto point = _mesh.point(v);
+      auto d = dot(point, normal);
+      fcoeff << normal[0], normal[1], normal[2], -d;
+
+      // add face quadric contribution to the vertex quadric
+      vertex_quadric(_mesh, v) += fcoeff * fcoeff.transpose();
+    }
+}
+
 void intialize(Mesh& _mesh) {
   // Compute face normals
   _mesh.update_face_normals();
@@ -82,21 +99,8 @@ void intialize(Mesh& _mesh) {
 
     // INSERT CODE HERE FOR PART 1-------------------------------------------------------------------------------
     // Calculate vertex quadrics from incident triangles
+    updateQuadric(_mesh, vh);
     // ----------------------------------------------------------------------------------------------------------
-    for (Mesh::ConstVertexFaceIter f_it = _mesh.cvf_begin(vh); f_it != _mesh.cvf_end(vh); ++f_it) {
-      const auto fh = *f_it;
-      Eigen::Vector4d fcoeff;
-      // calculate face normal
-      const auto normal = _mesh.calc_face_normal(fh).normalized();
-
-      // calculate face plane coefficients
-      const auto point = _mesh.point(vh);
-      auto d = dot(point, normal);
-      fcoeff << normal[0], normal[1], normal[2], -d;
-
-      // add face quadric contribution to the vertex quadric
-      vertex_quadric(_mesh, vh) += fcoeff * fcoeff.transpose();
-    }
   }
 
   std::cout << "Finished initialization." << std::endl;
@@ -108,7 +112,7 @@ Vector4d optimal_pos(const Mesh& _mesh, const Matrix4d& Q, const VertexHandle& v
   Matrix4d s_mat = Q;
   s_mat.row(3) << 0., 0., 0., 1.;
   Eigen::ColPivHouseholderQR<Matrix4d> qr;
-  qr.setThreshold(1.1);
+  // qr.setThreshold(0.1);
   qr.compute(s_mat);
   // is s_mat full rank?
   if (qr.rank() == 4) {
@@ -116,7 +120,7 @@ Vector4d optimal_pos(const Mesh& _mesh, const Matrix4d& Q, const VertexHandle& v
     rhs << 0., 0., 0., 1.;
     ret = qr.solve(rhs);
     ret /= ret[3]; // normalize to w = 1
-    std::cout << "Hello" << std::endl;
+    // std::cout << "Hello" << std::endl;
   } else {
     // handle degenerate cases: naive implementation is to return mid point instead
     const auto l_pt = _mesh.point(v1);
@@ -246,7 +250,7 @@ void decimate(Mesh& _mesh, const unsigned int _target_num_vertices) {
   // Decimate using priority queue:
   //
   uint decimate_count = 0;
-  while (num_vertices > _target_num_vertices && !queue.empty()) {
+  while ((num_vertices - decimate_count) > _target_num_vertices && !queue.empty()) {
     // 1) Take first element of queue
     const auto vp = queue.top();
     queue.pop();
@@ -267,24 +271,23 @@ void decimate(Mesh& _mesh, const unsigned int _target_num_vertices) {
 
     // update relations to be deleted for the to_vertex
     _mesh.collapse(vheh); //this collapses the from vertex to the to vertex.
+    ++decimate_count;
 
     // change point position
-    // _mesh.set_point(vh_t, Vec3f(new_pos[0], new_pos[1], new_pos[2]));
+    _mesh.set_point(vh_t, Vec3f(new_pos[0], new_pos[1], new_pos[2]));
 
     // 3) Update queue
     // enqueue all neighboring vertices including this one
+    updateQuadric(_mesh, vh_t);
     enqueue_vertex(_mesh, queue, vh_t);
     for (Mesh::ConstVertexVertexIter vv_it = _mesh.vv_begin(vh_t); vv_it != _mesh.vv_end(vh_t); ++vv_it) {
+      updateQuadric(_mesh, *vv_it);
       enqueue_vertex(_mesh, queue, *vv_it);
     }
-
-    // Delete the items marked to be deleted
-    _mesh.garbage_collection();
-
-    // update num vertices
-    num_vertices = _mesh.n_vertices();
   }
   // --------------------------------------------------------------------------------------------------------------
+  // Delete the items marked to be deleted
+  _mesh.garbage_collection();
 
   std::cout << "Done." << std::endl;
 }
