@@ -51,6 +51,9 @@ link_directories (
   ${OPENMESH_LIBRARY_DIR}
 )
 
+# add c++11 support
+SET( CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -std=c++11 -Wno-deprecated-declarations")
+
 # Create executable.
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${OUTPUT_DIR})
 add_executable(${target_name} ${headers} ${sources})
