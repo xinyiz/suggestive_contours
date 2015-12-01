@@ -26,7 +26,12 @@ bool isSilhouette(Mesh &mesh, const Mesh::EdgeHandle &e, Vec3f cameraPos)  {
   //First face normal
   Vector3d n1 = computeFaceNormal(mesh, fh1);
   Vector3d n2 = computeFaceNormal(mesh, fh2);
-  Vector3d viewVec = Vector3d(cameraPos[0], cameraPos[1], cameraPos[2]);
+
+  VertexHandle vih = mesh.to_vertex_handle(mesh.halfedge_handle(e,0));
+  Vec3f p = mesh.point(vih);
+  Vector3d point(p[0], p[1], p[2]);
+
+  Vector3d viewVec = Vector3d(cameraPos[0], cameraPos[1], cameraPos[2]) - point;
 
   if((n1.dot(viewVec))*(n2.dot(viewVec)) < 0){
     return true;

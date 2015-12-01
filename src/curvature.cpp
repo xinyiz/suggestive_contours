@@ -87,38 +87,76 @@ void computeCurvature(Mesh& mesh, OpenMesh::VPropHandleT<CurvatureInfo>& curvatu
       Matrix3d TT = Ts[i]*Ts[i].transpose();
       M = M + ws[i]*ks[i]*TT;
     }
-    SelfAdjointEigenSolver<Matrix3d> es(M);
-    Matrix3d evecs = es.eigenvectors();
+    EigenSolver<Matrix3d> esolver;
+    esolver.compute(M);
+    auto evals = esolver.eigenvalues();
+    auto evecs = esolver.eigenvectors();
 
-    double evals0 = abs(es.eigenvalues()[0]);
-    double evals1 = abs(es.eigenvalues()[1]);
-    double evals2 = abs(es.eigenvalues()[2]);
-    unsigned i1;
-    unsigned i2;
-    unsigned min_i;
-    if( (evals0 < evals1) && (evals0 < evals2)){
-      i1 = 1;
-      i2 = 2;
-      min_i = 0;
-    } else if ((evals1 < evals2) && (evals1 < evals0)) {
-      i1 = 0;
-      i2 = 2;
-      min_i = 1;
-    } else {
-      i1 = 0;
-      i2 = 1;
-      min_i = 2;
+    //      get index of eigen vectors in the tangent plane
+    uint zidx;
+    for (uint i = 0; i < 3; ++i) {
+        if (std::fabs(evecs.col(i).real().transpose() * N_vi) > 0.0001) {
+            zidx = i;
+            break;
+        }
     }
+    const uint idx11 = (zidx == 0)? 1 : 0;
+    const uint idx22 = (zidx == 2)? 1 : 2;
+
+    // ignore complex part if any
+    // we expect the matrix M to be symmetric
+    Vec3f T1(evecs.col(idx11)[0].real(), evecs.col(idx11)[1].real(), evecs.col(idx11)[2].real());
+    Vec3f T2(evecs.col(idx22)[0].real(), evecs.col(idx22)[1].real(), evecs.col(idx22)[2].real());
+    // get k1 and k2 from eigen values
+    double k1 = 3. * evals[idx11].real() - 1. * evals[idx22].real();
+    double k2 = -1. * evals[idx11].real() + 3. * evals[idx22].real();
+
     // In the end you need to fill in this struct
+
     CurvatureInfo info;
-    info.curvatures[0] = es.eigenvalues()[i1];
-    info.curvatures[1] = es.eigenvalues()[i2];
-    Vector3d ev1 = es.eigenvectors().col(i1).normalized();
-    Vector3d ev2 = es.eigenvectors().col(i2).normalized();
-    info.directions[0] = Vec3f(ev1[0], ev1[1], ev1[2]);
-    info.directions[1] = Vec3f(ev2[0], ev2[1], ev2[2]);
+    info.curvatures[0] = k1;
+    info.curvatures[1] = k2;
+    info.directions[0] = T1;
+    info.directions[1] = T2;
 
     mesh.property(curvature, vih) = info;
+    //// -------------------------------------------------------------------------------------------------------------
+    //SelfAdjointEigenSolver<Matrix3d> es(M);
+    //Matrix3d evecs = es.eigenvectors();
+
+    //double evals0 = abs(es.eigenvalues()[0]);
+    //double evals1 = abs(es.eigenvalues()[1]);
+    //double evals2 = abs(es.eigenvalues()[2]);
+    //unsigned i1;
+    //unsigned i2;
+    //unsigned min_i;
+    //if( (evals0 < evals1) && (evals0 < evals2)){
+    //  i1 = 1;
+    //  i2 = 2;
+    //  min_i = 0;
+    //} else if ((evals1 < evals2) && (evals1 < evals0)) {
+    //  i1 = 0;
+    //  i2 = 2;
+    //  min_i = 1;
+    //} else {
+    //  i1 = 0;
+    //  i2 = 1;
+    //  min_i = 2;
+    //}
+    //CurvatureInfo info;
+    //double kk1 = es.eigenvalues()[i1];
+    //double kk2 = es.eigenvalues()[i2];
+    //info.curvatures[0] = 3. * kk1 - 1. * kk2;
+    //info.curvatures[1] = -1. * kk1 + 3. * kk2;
+//  //  // In the end you need to fill in this struct
+//  //  info.curvatures[0] = es.eigenvalues()[i1];
+//  //  info.curvatures[1] = es.eigenvalues()[i2];
+    //Vector3d ev1 = es.eigenvectors().col(i1).normalized();
+    //Vector3d ev2 = es.eigenvectors().col(i2).normalized();
+    //info.directions[0] = Vec3f(ev1[0], ev1[1], ev1[2]);
+    //info.directions[1] = Vec3f(ev2[0], ev2[1], ev2[2]);
+
+    //mesh.property(curvature, vih) = info;
     // -------------------------------------------------------------------------------------------------------------
   }
 }

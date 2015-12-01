@@ -40,7 +40,7 @@ void renderSuggestiveContours(Vec3f actualCamPos) { // use this camera position 
 
     Vec3f p[3];
     double c[3];
-    bool zero_crossing[3] = {false};
+    unsigned int zero_crossing[3] = {0};
     Vec3f vcd = mesh.property(viewCurvatureDerivative, fh);
     Vector3d viewCurveDeriv = Vector3d(vcd[0], vcd[1], vcd[2]);
     const Vec3f n = mesh.normal(fh);
@@ -56,23 +56,24 @@ void renderSuggestiveContours(Vec3f actualCamPos) { // use this camera position 
      
     // check if there is zero crossing
     if(c[0]*c[1] < 0){
-      zero_crossing[0] = true;
+      zero_crossing[0] = 1;
     }
     if (c[1]*c[2] < 0){
-      zero_crossing[1] = true;
+      zero_crossing[1] = 1;
     }
     if (c[2]*c[0] < 0){
-      zero_crossing[2] = true;
+      zero_crossing[2] = 1;
     }
       // check viewCurvatureDerivative
-    if(zero_crossing[0] || zero_crossing[1] || zero_crossing[2]){
+    if((zero_crossing[0] + zero_crossing[1] + zero_crossing[2]) == 2){
       const Vector3d vi = Vector3d(p[0][0],p[0][1],p[0][2]);
       Vector3d viewVec = Vector3d(actualCamPos[0],actualCamPos[1],actualCamPos[2])- vi;
       float DK = (viewVec.normalized()).dot(viewCurveDeriv);
       float td = DK/viewVec.norm();
-      float thetad = acos(N.dot(viewVec)/viewVec.norm());
-      if(DK > 0){
-      //if(DK > td && acos(N.dot(viewVec)) < thetad && acos(N.dot(viewVec)) > 0){
+      //std::cout << td << std::endl;
+      float thetad = acos(N.dot(viewVec.normalized()));
+      //if(DK > 0){
+      if(DK > 0.04 && thetad > .4){
         if(zero_crossing[0]){
           glVertex3f((p[0][0]+p[1][0])/2.0, 
                      (p[0][1]+p[1][1])/2.0,
