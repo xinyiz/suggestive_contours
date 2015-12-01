@@ -118,7 +118,12 @@ void renderMesh() {
     point[1] = mesh.point(*(++cfv_it));
     point[2] = mesh.point(*(++cfv_it));
 
+    //CurvatureInfo info1 = mesh.property(curvature,*cfv_it);
+    //avg_curva = info1 + info2 + info3/3;
+    //color = calculateColor(avg_curve)
+
     glBegin(GL_TRIANGLES);
+    //glchangeColor(color);
     glVertex3f(point[0][0], point[0][1], point[0][2]);
     glVertex3f(point[2][0], point[2][1], point[2][2]);
     glVertex3f(point[1][0], point[1][1], point[1][2]);
