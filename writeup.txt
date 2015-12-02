@@ -1,0 +1,21 @@
+*Decimation*
+
+*Suggestive Contours*
+
+1. Implementation of isSihouette and isSharpEdge is described perfectly in the problem statement d)
+
+2. Calculating View Curvatures
+
+We first project the view_vector to the tangent plane:
+view_vector_projected = view_vector - dot(tangent_plane_normal,view_vector)*tangent_plane_normal
+Then cos(theta) where theta is component of the first principal vector T1 is just the dot product. 
+The view curvature is then calculated as k1*cos(theta)^2 + k2*sin(theta)^2, wherek1 and k2 are the principal curvatures.
+
+3. Rendering Suggestive Contours
+
+For rendering, we loop over all of the faces to check for the two conditions that need to be satisfied by the suggestive contour: zero view curvature, and postive directional derivative in the view direction.
+For checking zero view curvature, we iterate over the vertices and the condition is satisfied if for two edges of the trianglular face, the vertices of the edges have different signed view curvature values. 
+To check for positive directional derivative, we pick the first vertex of the triangle as the vertex to calculate the view direction for that face. Then the directional derivative is the dot product of the view viector with the view curvature derivative. This value is constrained to be above a small positive threshold of 0.02*(norm of view vector) as descrived in the paper.
+Finally, as described in the paper, to eliminate unstable contours, if the angle between the view vector and normal is < ~ 11 degrees, those edges are also eliminated.
+
+
