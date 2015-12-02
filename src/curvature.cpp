@@ -120,44 +120,6 @@ void computeCurvature(Mesh& mesh, OpenMesh::VPropHandleT<CurvatureInfo>& curvatu
     info.directions[1] = T2;
 
     mesh.property(curvature, vih) = info;
-    //// -------------------------------------------------------------------------------------------------------------
-    //SelfAdjointEigenSolver<Matrix3d> es(M);
-    //Matrix3d evecs = es.eigenvectors();
-
-    //double evals0 = abs(es.eigenvalues()[0]);
-    //double evals1 = abs(es.eigenvalues()[1]);
-    //double evals2 = abs(es.eigenvalues()[2]);
-    //unsigned i1;
-    //unsigned i2;
-    //unsigned min_i;
-    //if( (evals0 < evals1) && (evals0 < evals2)){
-    //  i1 = 1;
-    //  i2 = 2;
-    //  min_i = 0;
-    //} else if ((evals1 < evals2) && (evals1 < evals0)) {
-    //  i1 = 0;
-    //  i2 = 2;
-    //  min_i = 1;
-    //} else {
-    //  i1 = 0;
-    //  i2 = 1;
-    //  min_i = 2;
-    //}
-    //CurvatureInfo info;
-    //double kk1 = es.eigenvalues()[i1];
-    //double kk2 = es.eigenvalues()[i2];
-    //info.curvatures[0] = 3. * kk1 - 1. * kk2;
-    //info.curvatures[1] = -1. * kk1 + 3. * kk2;
-//  //  // In the end you need to fill in this struct
-//  //  info.curvatures[0] = es.eigenvalues()[i1];
-//  //  info.curvatures[1] = es.eigenvalues()[i2];
-    //Vector3d ev1 = es.eigenvectors().col(i1).normalized();
-    //Vector3d ev2 = es.eigenvectors().col(i2).normalized();
-    //info.directions[0] = Vec3f(ev1[0], ev1[1], ev1[2]);
-    //info.directions[1] = Vec3f(ev2[0], ev2[1], ev2[2]);
-
-    //mesh.property(curvature, vih) = info;
-    // -------------------------------------------------------------------------------------------------------------
   }
 }
 
@@ -178,12 +140,12 @@ void computeViewCurvature(Mesh& mesh, OpenMesh::Vec3f camPos, OpenMesh::VPropHan
     CurvatureInfo info = mesh.property(curvature, vih);
     float K1 = info.curvatures[0];
     float K2 = info.curvatures[1];
-    Vector3d T1 = Vector3d(info.directions[0][0],info.directions[0][1],info.directions[0][2]);
-    Vector3d T2 = Vector3d(info.directions[1][0],info.directions[1][1],info.directions[1][2]);
+    Vector3d T1 = Vector3d(info.directions[0][0],info.directions[0][1],info.directions[0][2]).normalized();
+    Vector3d T2 = Vector3d(info.directions[1][0],info.directions[1][1],info.directions[1][2]).normalized();
 
     // Project view to tangent plane
     Vector3d viewVec = Vector3d(camPos[0],camPos[1],camPos[2]) - vi;
-    Vector3d viewTanDir = (viewVec - N_vi.dot(viewVec)*viewVec).normalized();
+    Vector3d viewTanDir = (viewVec - N_vi.dot(viewVec)*N_vi).normalized();
     float cosTheta2 = pow(viewTanDir.dot(T1),2.0);
     float sinTheta2 = 1.0 - cosTheta2;
     float c_view = K1*cosTheta2 + K2*sinTheta2;

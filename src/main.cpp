@@ -44,7 +44,7 @@ void renderSuggestiveContours(Vec3f actualCamPos) { // use this camera position 
     Vec3f vcd = mesh.property(viewCurvatureDerivative, fh);
     Vector3d viewCurveDeriv = Vector3d(vcd[0], vcd[1], vcd[2]);
     const Vec3f n = mesh.normal(fh);
-    Vector3d N = Vector3d(n[0], n[1], n[2]);
+    Vector3d N = Vector3d(n[0], n[1], n[2]).normalized();
 
 
     Mesh::ConstFaceVertexIter fv_it = mesh.cfv_begin(fh);
@@ -69,11 +69,9 @@ void renderSuggestiveContours(Vec3f actualCamPos) { // use this camera position 
       const Vector3d vi = Vector3d(p[0][0],p[0][1],p[0][2]);
       Vector3d viewVec = Vector3d(actualCamPos[0],actualCamPos[1],actualCamPos[2])- vi;
       float DK = (viewVec.normalized()).dot(viewCurveDeriv);
-      float td = DK/viewVec.norm();
-      //std::cout << td << std::endl;
+      float DK_thresh = DK/viewVec.norm();
       float thetad = acos(N.dot(viewVec.normalized()));
-      //if(DK > 0){
-      if(DK > 0.04 && thetad > .4){
+      if(DK_thresh > 0.02 && thetad > 0.2){
         if(zero_crossing[0]){
           glVertex3f((p[0][0]+p[1][0])/2.0, 
                      (p[0][1]+p[1][1])/2.0,
@@ -110,6 +108,7 @@ void renderMesh() {
 
   // WRITE CODE HERE TO RENDER THE TRIANGLES OF THE MESH ---------------------------------------------------------
   // -------------------------------------------------------------------------------------------------------------
+// show edges
   for (Mesh::FaceIter f_it=mesh.faces_begin(); f_it!=mesh.faces_end(); ++f_it){
     OpenMesh::Vec3f point[3];
     Mesh::ConstFaceVertexIter cfv_it;
