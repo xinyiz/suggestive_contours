@@ -1,5 +1,16 @@
 *Decimation*
+1. Calculating quadrics
+This is pretty straightforward. Per vertex, we loop over all adjacent faces and for each face, we obtain the normal, normalize it, and calculate the distance of origin from the plane as the projection of the vertex position on the plane normal. Then the quadric is simply the 4 vector of the plane coefficients (normal and distance) and its transpose. We sum over the quadrics for each face to get the quadric for the vertex.
 
+2. Collapse priority for half edges
+To do this, we sum the quadrics for the end vertices for the half edge to obtain the half edge quadric, and then evaluate the quadric error at the optimal position of the new vertex if the half edge were to be collapsed. This error value is stored as the priority for this half edge.
+
+3. Optimal position for collapsed vertex
+To obtain the optimal position for the collapsed vertex, we first obtain the rank revealing QR decomposition for the solver matrix obtained from the half edge quadric as described in the paper. If the solver matrix is full rank, we go ahead and obtain the optimal vertex position by solving the linear system. If not, we fall back to using the to_vertex of the half edge as the optimal position.
+
+4. Decimation
+For a given target number of vertices, we simply iterate over the priority queue of half edges, and where a collapse is valid, we collapse the half edge, update the position of the to_vertex to the optimal position evaluated for this collapse, and update the priorities for this vertex and its 1-circle neighbors (this also involves updating their quadrics first). 
+   
 *Suggestive Contours*
 
 1. Implementation of isSihouette and isSharpEdge is described perfectly in the problem statement d)
