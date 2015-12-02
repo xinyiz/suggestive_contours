@@ -26,14 +26,14 @@ int lastPos[2];
 float cameraPos[4] = { 0, 0, 4, 1 };
 Vec3f up, pan;
 int windowWidth = 640, windowHeight = 480;
-bool showSurface = true, showAxes = true, showCurvature = false, showNormals = false;
+bool showSurface = true, showAxes = false, showCurvature = false, showNormals = false, renderFace = false;
 
 float specular[] = { 1.0, 1.0, 1.0, 1.0 };
 float shininess[] = { 50.0 };
 
 void renderSuggestiveContours(Vec3f actualCamPos) { // use this camera position to account for panning etc.
   glBegin(GL_LINES);
-  glColor3f(0.5, 0.5, 0.5);
+  glColor3f(0.8, 0.8, 0.5);
   glLineWidth(2.0f);
   for (Mesh::ConstFaceIter f_it = mesh.faces_begin(); f_it != mesh.faces_end(); ++f_it) {
     const Mesh::FaceHandle fh = (*f_it);
@@ -166,6 +166,23 @@ void renderMesh() {
   }
 
   if (!showSurface) glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+
+  // show edges
+  if (renderFace) {
+    glDisable(GL_LIGHTING);
+    glLineWidth(1.0f);
+    glColor4f(0.0, 0.0, 0.0, 1.0);
+    for (Mesh::EdgeIter e_it = mesh.edges_begin(); e_it != mesh.edges_end(); ++ e_it) {
+      OpenMesh::Vec3f point[2];
+      const auto hh = mesh.halfedge_handle(*e_it, 1);
+      point[0] = mesh.point(mesh.from_vertex_handle(hh));
+      point[1] = mesh.point(mesh.to_vertex_handle(hh));
+      glBegin(GL_LINES);
+      glVertex3f(point[0][0], point[0][1], point[0][2]);
+      glVertex3f(point[1][0], point[1][1], point[1][2]);
+      glEnd();
+    }
+  }
 
   glDisable(GL_LIGHTING);
   glDepthRange(0, 0.999);
@@ -327,6 +344,7 @@ void keyboard(unsigned char key, int x, int y) {
   else if (key == 'a' || key == 'A') showAxes = !showAxes;
   else if (key == 'c' || key == 'C') showCurvature = !showCurvature;
   else if (key == 'n' || key == 'N') showNormals = !showNormals;
+  else if (key == 'r' || key == 'R') renderFace = !renderFace;
   else if (key == 'd' || key == 'D') {
     float percentage = 1.0f;
     while (percentage <= 0.0f || percentage >= 1.0f) {
