@@ -279,9 +279,11 @@ void decimate(Mesh& _mesh, const unsigned int _target_num_vertices) {
     // 3) Update queue
     // enqueue all neighboring vertices including this one
     updateQuadric(_mesh, vh_t);
-    enqueue_vertex(_mesh, queue, vh_t);
     for (Mesh::ConstVertexVertexIter vv_it = _mesh.vv_begin(vh_t); vv_it != _mesh.vv_end(vh_t); ++vv_it) {
       updateQuadric(_mesh, *vv_it);
+    }
+    enqueue_vertex(_mesh, queue, vh_t);
+    for (Mesh::ConstVertexVertexIter vv_it = _mesh.vv_begin(vh_t); vv_it != _mesh.vv_end(vh_t); ++vv_it) {
       enqueue_vertex(_mesh, queue, *vv_it);
     }
   }
