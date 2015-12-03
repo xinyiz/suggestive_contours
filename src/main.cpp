@@ -31,6 +31,8 @@ bool showSurface = true, showAxes = false, showCurvature = false, showNormals = 
 float specular[] = { 1.0, 1.0, 1.0, 1.0 };
 float shininess[] = { 50.0 };
 
+float max_curvature = 0.5;
+
 void renderSuggestiveContours(Vec3f actualCamPos) { // use this camera position to account for panning etc.
   glBegin(GL_LINES);
   glColor3f(0.8, 0.8, 0.5);
@@ -105,8 +107,8 @@ Vec3f calculateColor(CurvatureInfo c_info) {
 	float c_curv1 = c_info.curvatures[0];
 	float c_curv2 = c_info.curvatures[1];
 	//Normalize the values so that they are between 0 and 1
-	c_curv1 = (c_curv1 + 0.05f) / 0.1f;
-	c_curv2 = (c_curv2 + 0.05f) / 0.1f;
+	c_curv1 = (c_curv1 + max_curvature) / (2 * max_curvature);
+  c_curv2 = (c_curv2 + max_curvature) / (2 * max_curvature);
 	float c_curv;
 	//Find the max of the two curvatures
 	if (c_curv1 > c_curv2) c_curv = c_curv1;
@@ -418,7 +420,8 @@ int main(int argc, char** argv) {
       mesh.point(*v_it) /= maxLength;
   }
 
-  computeCurvature(mesh, curvature);
+  max_curvature = 0;
+  max_curvature = computeCurvature(mesh, curvature, max_curvature);
 
   up = Vec3f(0, 1, 0);
   pan = Vec3f(0, 0, 0);

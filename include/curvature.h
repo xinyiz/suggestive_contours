@@ -9,7 +9,7 @@ struct CurvatureInfo {
 };
 
 float computeFaceArea(const Mesh &mesh, const Mesh::FaceHandle &fh);
-void computeCurvature(Mesh& mesh, OpenMesh::VPropHandleT<CurvatureInfo>& curvature);
+float computeCurvature(Mesh& mesh, OpenMesh::VPropHandleT<CurvatureInfo>& curvature, float max_curvature);
 void computeViewCurvature(Mesh& mesh, OpenMesh::Vec3f camPos, OpenMesh::VPropHandleT<CurvatureInfo>& curvature,
   OpenMesh::VPropHandleT<double>& viewCurvature, OpenMesh::FPropHandleT<OpenMesh::Vec3f>& viewCurvatureDerivative);
 

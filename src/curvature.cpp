@@ -23,7 +23,7 @@ float computeFaceArea(const Mesh &mesh, const Mesh::FaceHandle &fh){
 
   return 0.5*E1.cross(E2).norm();
 }
-void computeCurvature(Mesh& mesh, OpenMesh::VPropHandleT<CurvatureInfo>& curvature) {
+float computeCurvature(Mesh& mesh, OpenMesh::VPropHandleT<CurvatureInfo>& curvature, float max_curvature) {
   std::vector<Vector3d> Ts; 
   std::vector<float> ks; 
   std::vector<float> ws; 
@@ -111,6 +111,9 @@ void computeCurvature(Mesh& mesh, OpenMesh::VPropHandleT<CurvatureInfo>& curvatu
     double k1 = 3. * evals[idx11].real() - 1. * evals[idx22].real();
     double k2 = -1. * evals[idx11].real() + 3. * evals[idx22].real();
 
+    if (abs(k1) > max_curvature) max_curvature = abs(k1);
+    if (abs(k2) > max_curvature) max_curvature = abs(k2);
+
     // In the end you need to fill in this struct
 
     CurvatureInfo info;
@@ -121,6 +124,7 @@ void computeCurvature(Mesh& mesh, OpenMesh::VPropHandleT<CurvatureInfo>& curvatu
 
     mesh.property(curvature, vih) = info;
   }
+  return max_curvature;
 }
 
 void computeViewCurvature(Mesh& mesh, OpenMesh::Vec3f camPos, OpenMesh::VPropHandleT<CurvatureInfo>& curvature,
