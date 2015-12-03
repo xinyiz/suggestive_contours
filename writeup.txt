@@ -29,4 +29,14 @@ For checking zero view curvature, we iterate over the vertices and the condition
 To check for positive directional derivative, we pick the first vertex of the triangle as the vertex to calculate the view direction for that face. Then the directional derivative is the dot product of the view viector with the view curvature derivative. This value is constrained to be above a small positive threshold of 0.02*(norm of view vector) as descrived in the paper.
 Finally, as described in the paper, to eliminate unstable contours, if the angle between the view vector and normal is < ~ 11 degrees, those edges are also eliminated.
 
+*Additional Feature: Shading*
+
+1. Find max_curvature
+
+We will need to know the maximum curvature of the mesh for computing the spectrum of color. We obtain it by passing another variable to the function computeCurvature which sets its value to the highest curvature computed and then returns it.
+
+2.	Curvature-based color
+
+Each vertex of the triangle faces is assigned a color based on its curvature. We calculate this (in the function “calculateColor”) by first normalizing the curvatures so that they are between 0 and 1; we do this by shifting the curvature values by the maximum curvature of the mesh and dividing by 2*max_curvature.
+Between the two curvatures at each vertex, we define the larger-valued curvature as the representative curvature at that point.  The higher curvatures (0.75 < c < 1) we color red [color = Vec3f(c_curv, 0, 0)] to indicate “valleys” in the mesh, and the lower curvatures (0 < c < 0.25) we color blue [color = Vec3f(0, 0, 1 - c_curv)] to indicate “mountains” in the mesh. Relatively flat surfaces are colored in a more yellow-green: (0.25 < c < 0.5) is colored a blue-green [color = Vec3f(0, c_curv, 1 - c_curv)], (0.5 < c < 0.75) is colored a red-green [color = Vec3f(c_curv, 1 - c_curv, 0)].
 
