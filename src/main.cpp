@@ -66,7 +66,10 @@ void renderSuggestiveContours(Vec3f actualCamPos) { // use this camera position 
     }
       // check viewCurvatureDerivative
     if((zero_crossing[0] + zero_crossing[1] + zero_crossing[2]) == 2){
-      const Vector3d vi = Vector3d(p[0][0],p[0][1],p[0][2]);
+      const Vector3d vi1 = Vector3d(p[0][0],p[0][1],p[0][2]);
+      const Vector3d vi2 = Vector3d(p[1][0],p[1][1],p[1][2]);
+      const Vector3d vi3 = Vector3d(p[2][0],p[2][1],p[2][2]);
+      const Vector3d vi = (vi1 + vi2 + vi3)/3.0;
       Vector3d viewVec = Vector3d(actualCamPos[0],actualCamPos[1],actualCamPos[2])- vi;
       float DK = (viewVec.normalized()).dot(viewCurveDeriv);
       float DK_thresh = DK/viewVec.norm();
